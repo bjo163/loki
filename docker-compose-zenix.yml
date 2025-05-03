@@ -1,0 +1,29 @@
+version: "3"
+
+services:
+  loki:
+    image: grafana/loki:2.7.1
+    container_name: "loki"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+    restart: always
+    user: "0"
+    environment:
+      - TZ=${TZ}
+      - LANG=${LANG}
+    command: -config.file=/etc/loki/config.yml
+    volumes:
+      - ./etc/loki/config.yml:/etc/loki/config.yml
+      - loki-volume:/loki
+    ports:
+      - "${LOKI_PORT}:3100"
+    networks:
+      tr_network:
+
+networks:
+  tr_network:
+
+volumes:
+  loki-volume:
