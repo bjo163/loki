@@ -20,7 +20,7 @@ services:
     ports:
       - "${LOKI_PORT}:3100"
     networks:
-      - tr_network
+      - grafana_network
 
   promtail:
     image: grafana/promtail:2.7.1
@@ -34,7 +34,7 @@ services:
     depends_on:
       - loki
     networks:
-      - tr_network
+      - grafana_network
 
   grafana:
     image: grafana/grafana:10.2.3
@@ -52,10 +52,10 @@ services:
     depends_on:
       - loki
     networks:
-      - tr_network
+      - grafana_network
 
 networks:
-  tr_network:
+  grafana_network:
 
 volumes:
   loki-volume:
