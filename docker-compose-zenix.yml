@@ -4,11 +4,11 @@ services:
   loki:
     image: grafana/loki:2.7.1
     container_name: "loki"
+    restart: always
     logging:
       driver: "json-file"
       options:
         max-size: "5m"
-    restart: always
     user: "0"
     environment:
       - TZ=${TZ}
@@ -20,10 +20,43 @@ services:
     ports:
       - "${LOKI_PORT}:3100"
     networks:
-      tr_network:
+      - tr_network
+
+  promtail:
+    image: grafana/promtail:2.7.1
+    container_name: "promtail"
+    restart: always
+    ports:
+      - "514:514/udp"  # Port syslog UDP
+    volumes:
+      - ./etc/promtail/promtail.yaml:/etc/promtail/promtail.yaml
+    command: -config.file=/etc/promtail/promtail.yaml
+    depends_on:
+      - loki
+    networks:
+      - tr_network
+
+  grafana:
+    image: grafana/grafana:10.2.3
+    container_name: "grafana"
+    restart: always
+    user: "0"
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_USER}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
+      - TZ=${TZ}
+    volumes:
+      - grafana-storage:/var/lib/grafana
+    depends_on:
+      - loki
+    networks:
+      - tr_network
 
 networks:
   tr_network:
 
 volumes:
   loki-volume:
+  grafana-storage:
