@@ -27,7 +27,7 @@ services:
     container_name: "promtail"
     restart: always
     ports:
-      - "514:514/udp"  # Port syslog UDP
+      - "7514:514/udp"  # Port syslog UDP
     volumes:
       - ./etc/promtail/promtail.yaml:/etc/promtail/promtail.yaml
     command: -config.file=/etc/promtail/promtail.yaml
