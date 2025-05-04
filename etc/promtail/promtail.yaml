@@ -9,17 +9,14 @@ clients:
   - url: http://loki:3100/loki/api/v1/push
 
 scrape_configs:
-  - job_name: "syslog"           # Level 1 (dimulai dengan '-')
-    # 'labels', 'syslog', dan 'relabel_configs' harus di Level 2
-    labels:                      # Level 2 (indentasi 2 spasi dari '-')
-      job: "syslog"              # Level 3
-    syslog:                      # Level 2 (indentasi sama dengan 'labels')
-      listen_address: 0.0.0.0:514 # Level 3
+  - job_name: "syslog"
+    syslog:
+      listen_address: 0.0.0.0:514
       listen_protocol: udp
       idle_timeout: 60s
       label_structured_data: yes
-    relabel_configs:             # Level 2 (indentasi sama dengan 'labels' dan 'syslog')
-      - source_labels: ['__syslog_message_hostname'] # Level 3 (dimulai dengan '-')
-        target_label: 'routerboard'                 # Level 4
-      - source_labels: ['__syslog_connection_hostname'] # Level 3
-        target_label: 'syslog_sender_host'          # Level 4
+    relabel_configs:
+      - source_labels: ['__syslog_message_hostname']
+        target_label: 'host'
+      - source_labels: ['__syslog_connection_ip_address']
+        target_label: 'ip'
