@@ -9,19 +9,16 @@ clients:
   - url: http://loki:3100/loki/api/v1/push
 
 scrape_configs:
-- job_name: "syslog"
-  # Labels should be defined at the job level, not inside the syslog specific config
-  # Moved labels from syslog block to here
+- job_name: "syslog" # Anda bisa ganti nama job jika mau, misal "mikrotik"
   labels:
-    job: "syslog"
+    job: "syslog" # Sesuaikan label job jika Anda ganti nama job_name
   syslog:
-    listen_address: 0.0.0.0:514
-    listen_protocol: udp
+    listen_address: 0.0.0.0:514   # Mendengarkan di semua interface pada port UDP 514
+    listen_protocol: udp          # Protokol UDP (umum untuk Mikrotik syslog)
     idle_timeout: 60s
-    label_structured_data: yes
-    # Removed labels block from here
+    label_structured_data: yes    # Mencoba parse data terstruktur jika ada
   relabel_configs:
-  - source_labels: ['__syslog_message_hostname']
-    target_label: 'routerboard'
-  - source_labels: ['__syslog_connection_hostname']
-    target_label: 'syslog_host'
+  - source_labels: ['__syslog_message_hostname'] # Ambil hostname dari pesan log Mikrotik
+    target_label: 'routerboard'                 # Jadikan label 'routerboard'
+  - source_labels: ['__syslog_connection_hostname'] # Ambil hostname dari koneksi (IP pengirim)
+    target_label: 'syslog_sender_host'          # Jadikan label 'syslog_sender_host' (opsional, bisa diganti/dihapus)
