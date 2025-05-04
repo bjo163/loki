@@ -49,7 +49,7 @@ services:
     # user: "472" # Grafana biasanya berjalan dengan user ID 472
     ports:
       # Port Grafana di host, default 3000 jika tidak diset
-      - "${GRAFANA_PORT:-3000}:3000"
+      - "${GRAFANA_PORT:-3000}"
     environment:
       - GF_SECURITY_ADMIN_USER=${GRAFANA_USER:-admin} # Menambahkan default user
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin} # Menambahkan default password (GANTI INI!)
