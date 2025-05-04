@@ -1,4 +1,4 @@
-version: "3"
+version: "3.8" # Sebaiknya gunakan versi yang lebih baru jika memungkinkan
 
 services:
   loki:
@@ -9,16 +9,16 @@ services:
       driver: "json-file"
       options:
         max-size: "5m"
-    user: "0"
+    # user: "0" # Biasanya tidak perlu dijalankan sebagai root, kecuali ada kebutuhan khusus
     environment:
-      - TZ=${TZ}
-      - LANG=${LANG}
+      - TZ=${TZ:-Etc/UTC} # Menambahkan default TZ jika tidak diset
+      - LANG=${LANG:-en_US.UTF-8} # Menambahkan default LANG jika tidak diset
     command: -config.file=/etc/loki/config.yml
     volumes:
-      - ./etc/loki/config.yml:/etc/loki/config.yml
+      - ./etc/loki/config.yml:/etc/loki/config.yml:ro # Mode read-only lebih aman untuk config
       - loki-volume:/loki
     ports:
-      - "${LOKI_PORT}:3100"
+      - "${LOKI_PORT:-3100}:3100" # Menambahkan default LOKI_PORT jika tidak diset
     networks:
       - grafana_network
 
@@ -26,10 +26,16 @@ services:
     image: grafana/promtail:2.7.1
     container_name: "promtail"
     restart: always
+    # user: "10001" # Menjalankan sebagai non-root (misal nobody/nogroup, ID 10001 di image grafana/promtail) lebih aman
     ports:
-      - "7514:514/udp"  # Port syslog UDP
+      # Port host 7514 di map ke port 514/udp di container promtail
+      # Pastikan Mikrotik mengirim log ke IP HOST DOCKER Anda di port 7514 UDP
+      - "7514:514/udp"
     volumes:
-      - ./etc/promtail/promtail.yaml:/etc/promtail/promtail.yaml
+      - ./etc/promtail/promtail.yaml:/etc/promtail/promtail.yaml:ro # Mode read-only lebih aman untuk config
+      # Volume untuk menyimpan posisi file log (positions.yaml)
+      # Ini penting agar promtail tidak mengirim ulang log lama saat restart
+      - promtail-positions:/tmp # Direktori /tmp di container akan dipersist di volume
     command: -config.file=/etc/promtail/promtail.yaml
     depends_on:
       - loki
@@ -37,16 +43,20 @@ services:
       - grafana_network
 
   grafana:
-    image: grafana/grafana:10.2.3
+    image: grafana/grafana:10.2.3 # Pertimbangkan untuk menggunakan versi terbaru jika stabil
     container_name: "grafana"
     restart: always
-    user: "0"
+    # user: "472" # Grafana biasanya berjalan dengan user ID 472
     ports:
-      - "${GRAFANA_PORT}"
+      # Port Grafana di host, default 3000 jika tidak diset
+      - "${GRAFANA_PORT:-3000}:3000"
     environment:
-      - GF_SECURITY_ADMIN_USER=${GRAFANA_USER}
-      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
-      - TZ=${TZ}
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_USER:-admin} # Menambahkan default user
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin} # Menambahkan default password (GANTI INI!)
+      - TZ=${TZ:-Etc/UTC} # Menambahkan default TZ
+      # Menambahkan Loki sebagai datasource secara otomatis (opsional)
+      # - GF_DATASOURCES_DEFAULT_DATASOURCE_URL=http://loki:3100
+      # - GF_DATASOURCES_DEFAULT_DATASOURCE_TYPE=loki
     volumes:
       - grafana-storage:/var/lib/grafana
     depends_on:
@@ -56,7 +66,9 @@ services:
 
 networks:
   grafana_network:
+    driver: bridge # Eksplisit mendefinisikan driver network
 
 volumes:
   loki-volume:
   grafana-storage:
+  promtail-positions: # Mendefinisikan named volume untuk positions promtail
