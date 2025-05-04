@@ -10,13 +10,16 @@ clients:
 
 scrape_configs:
 - job_name: "syslog"
+  # Labels should be defined at the job level, not inside the syslog specific config
+  # Moved labels from syslog block to here
+  labels:
+    job: "syslog"
   syslog:
     listen_address: 0.0.0.0:514
     listen_protocol: udp
     idle_timeout: 60s
     label_structured_data: yes
-    labels:
-    job: "syslog"
+    # Removed labels block from here
   relabel_configs:
   - source_labels: ['__syslog_message_hostname']
     target_label: 'routerboard'
